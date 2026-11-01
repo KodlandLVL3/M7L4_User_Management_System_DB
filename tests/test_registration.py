@@ -36,11 +36,34 @@ def test_add_new_user(setup_database, connection):
     user = cursor.fetchone()
     assert user, "Пользователь должен быть добавлен в базу данных."
 
-# Возможные варианты тестов:
-"""
-Тест добавления пользователя с существующим логином.
-Тест успешной аутентификации пользователя.
-Тест аутентификации несуществующего пользователя.
-Тест аутентификации пользователя с неправильным паролем.
-Тест отображения списка пользователей.
-"""
+def test_add_duplicate_user(setup_database, connection):
+    """Тест добавления пользователя с существующим логином."""
+    add_user('testuser', 'testuser@example.com', 'password123')
+    result = add_user('testuser', 'another@example.com', 'different123')
+    assert result is False, "Добавление дубликата пользователя должно вернуть False."
+
+def test_authenticate_user_success(setup_database, connection):
+    """Тест успешной аутентификации пользователя."""
+    add_user('testuser', 'testuser@example.com', 'password123')
+    result = authenticate_user('testuser', 'password123')
+    assert result is True, "Аутентификация с правильными данными должна быть успешной."
+
+def test_authenticate_nonexistent_user(setup_database, connection):
+    """Тест аутентификации несуществующего пользователя."""
+    result = authenticate_user('nonexistent', 'password123')
+    assert result is False, "Аутентификация несуществующего пользователя должна вернуть False."
+
+def test_authenticate_wrong_password(setup_database, connection):
+    """Тест аутентификации пользователя с неправильным паролем."""
+    add_user('testuser', 'testuser@example.com', 'password123')
+    result = authenticate_user('testuser', 'wrongpassword')
+    assert result is False, "Аутентификация с неправильным паролем должна вернуть False."
+
+def test_display_users(setup_database, connection, capsys):
+    """Тест отображения списка пользователей."""
+    add_user('user1', 'user1@example.com', 'pass1')
+    add_user('user2', 'user2@example.com', 'pass2')
+    display_users()
+    captured = capsys.readouterr()
+    assert 'user1' in captured.out, "Пользователь user1 должен быть отображен."
+    assert 'user2' in captured.out, "Пользователь user2 должен быть отображен."
